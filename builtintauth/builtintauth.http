@@ -1,0 +1,6 @@
+@builtintauth_HostAddress = http://localhost:5028
+
+GET {{builtintauth_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

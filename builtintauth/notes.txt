@@ -1,0 +1,59 @@
+﻿1. Add Authentication service to registration part:
+
+	> builder.Services.AddAuthentication(options =>
+		{
+			options.DefaultAuthenticateScheme = IdentityConstants.BearerScheme;
+		})
+		.AddBearerToken(IdentityConstants.BearerScheme);
+
+2. Apply authorization:
+	> builder.Services.AddAuthorizationBuilder();
+
+3. Add NuGet package 
+
+	Microsoft.EntityFrameworkCore.Tools
+	Microsoft.EntityFrameworkCore.Design
+	Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+
+4. Using PostgreSql (SqlLite, SqlServer, MySql etc.) -= add NuGetPackage:
+     NpgSql.EntityFrameworkCore.PostgreSql +  
+	 ? Microsoft.EntityFrameworkCore.SqlLite + Microsoft.EntityFrameworkCore.Design ?
+
+5. Add DbContext class extends from IdentityDbContext<YourIdentityUserClass - see p.1 >
+	+ constructor with options. E.G.
+	 AppIdentityDbContext: IdentityDbContext<AppUser>{ + constructor with options}
+
+6. Register created DbContext with services and add IdentityCore to regisatered service:
+
+	builder.Services.AddDbContext<AppIdentityDbContext>(options => {
+		options.UseNpgsql(dataSource);
+	});
+
+	builder.Services.AddIdentity<IdentityUser, IdentityRole>()
+		 .AddEntityFrameworkStores<AppIdentityDbContext>()
+		 .AddDefaultTokenProviders()
+		 .AddApiEndpoints();
+		
+		// added login/logout/tokenregistration endpoints etc.
+
+8. Map IdentityApi with app and user identity model:
+
+	app.MapIdentityApi<AppUser>();
+
+9. Add some check endpoint with minimal api:
+
+	app.MapGet("/", (ClaimsPrincipal user) => $"Hello {user.Identity!.Name}")
+    .RequireAuthorization();
+
+	In Controller use registered  AuthenticationSchemes:
+
+	    [HttpGet("user", Name = "user")]
+        [Authorize(AuthenticationSchemes = "Identity.Bearer")]
+        public ActionResult<string> GetUser()
+
+10. Add migration:
+	> dotnet ef migrations Add InitialCreate
+	> PM console: add-migration Initial + > update-database
+
+	select * from public."AspNetUsers"
+
